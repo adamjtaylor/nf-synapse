@@ -14,6 +14,12 @@ process STAGE_FILE {
     script:
     upload_location = Utils.get_publish_dir(params, file_id)
     """
-    aws s3 cp ${file} "${upload_location}/${file.name}"
+    set -euo pipefail
+
+    # normalize s3 uri: collapse s3:/// → s3:// and any // in path
+    dest=\$(echo "${upload_location}/${file.name}" \
+      | sed -E 's|^s3:/+|s3://|; s|//+|/|g')
+
+    aws s3 cp "${file}" "\$dest"
     """
 }
